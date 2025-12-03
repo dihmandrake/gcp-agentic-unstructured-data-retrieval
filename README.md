@@ -65,3 +65,17 @@ This mode starts an interactive chat session with the RAG agent, allowing you to
 ```bash
 poetry run python main.py --mode chat
 ```
+
+## Makefile Commands
+
+This project uses a `Makefile` to streamline common development tasks.
+
+*   **`make install`**:
+    *   Installs all project dependencies using Poetry.
+
+*   **`make check`**:
+    *   Performs a series of checks to ensure code quality and consistency:
+        *   Checks for lock file consistency.
+        *   Lints the code using `ruff`.
+        *   Performs static type checking with `mypy`.
+        *   Checks for obsolete dependencies with `deptry`.
