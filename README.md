@@ -62,16 +62,27 @@ A Python-based skeleton for a RAG (Retrieval-Augmented Generation) system. It ha
 
 The application has two modes: `ingest` and `chat`.
 
-### Ingest Mode
+### Ingest Mode: The GCS-Native Workflow
 
-This mode processes PDF files from the `data/raw` directory and prepares them for indexing.
+This mode uses a Google Cloud Storage-native approach to index your documents in Vertex AI Search. This is the recommended method for `CONTENT_REQUIRED` datastores.
 
-1.  Place your PDF files into the `data/raw` directory.
-2.  Run the ingestion pipeline:
+1.  **Place your PDF files** into the `data/raw` directory.
+
+2.  **Run the ingestion pipeline:**
     ```bash
     poetry run python main.py --mode ingest
     ```
-    This will create a `processed_data.json` file in the `data/processed` directory.
+
+#### End-to-End Ingestion Flow
+
+Running the `ingest` command triggers the following automated process:
+
+1.  **Upload Raw PDFs to GCS:** Each PDF file in `data/raw` is uploaded to a `raw/` directory in your configured GCS bucket.
+2.  **Generate Metadata:** A `metadata.jsonl` file is created locally in the `data/processed` directory. Each line in this file is a JSON object that contains:
+    *   A unique `id` for the document.
+    *   A `content` object with the `mimeType` and the GCS `uri` pointing to the uploaded PDF.
+3.  **Upload Metadata to GCS:** The `metadata.jsonl` file is uploaded to a `metadata/` directory in your GCS bucket.
+4.  **Trigger Vertex AI Search Import:** The script makes an API call to Vertex AI Search, pointing it to the `metadata.jsonl` file on GCS. Vertex AI Search then reads this file, fetches the PDFs from GCS, and handles the parsing, chunking, and indexing internally.
 
 ### Chat Mode
 
@@ -113,14 +124,14 @@ Once the development setup is complete, you can test the application by followin
     Place the PDF documents you want to process into the `data/raw/` directory.
 
 3.  **Run the Ingestion Pipeline:**
-    Use the `ingest` mode to parse, chunk, and process your PDFs.
+    Use the `ingest` mode to upload your PDFs to GCS and trigger the Vertex AI Search import.
     ```bash
     poetry run python main.py --mode ingest
     ```
-    After the process completes, a `processed_data.json` file will be created in the `data/processed/` directory. This file is not yet uploaded to Vertex AI Search.
+    After the process completes, a `metadata.jsonl` file will be created in the `data/processed/` directory, and the import job will be initiated in Vertex AI Search.
 
 4.  **Start the Chatbot:**
-    Run the `chat` mode to interact with the RAG agent. The agent will use the documents indexed in your Vertex AI Search datastore to answer questions.
+    Once the import is complete in the Google Cloud Console, run the `chat` mode to interact with the RAG agent. The agent will use the documents indexed in your Vertex AI Search datastore to answer questions.
     ```bash
     poetry run python main.py --mode chat
     ```
