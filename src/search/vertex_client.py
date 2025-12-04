@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from google.api_core.client_options import ClientOptions
 from google.cloud import discoveryengine_v1 as discoveryengine
 from src.shared.logger import setup_logger
 
@@ -12,20 +13,29 @@ class VertexSearchClient:
     """
     def __init__(self):
         self.project_id = os.getenv("PROJECT_ID")
-        self.location = os.getenv("LOCATION")
         self.data_store_id = os.getenv("DATA_STORE_ID")
+        # Vertex AI Search uses 'global', 'us', or 'eu'. Assuming 'us' based on prior errors.
+        self.discovery_engine_location = "us"
 
-        if not all([self.project_id, self.location, self.data_store_id]):
-            logger.error("Missing one or more environment variables: PROJECT_ID, LOCATION, DATA_STORE_ID")
+        if not all([self.project_id, self.data_store_id]):
+            logger.error("Missing one or more environment variables: PROJECT_ID, DATA_STORE_ID")
             raise ValueError("Missing required environment variables for VertexSearchClient.")
 
-        self.client = discoveryengine.SearchServiceClient()
+        # Set the API endpoint for the 'us' multi-region
+        api_endpoint = f"{self.discovery_engine_location}-discoveryengine.googleapis.com"
+        client_options = ClientOptions(api_endpoint=api_endpoint)
+
+        logger.info(f"VertexSearchClient initializing with endpoint: {api_endpoint}")
+        self.client = discoveryengine.SearchServiceClient(client_options=client_options)
+        
+        # Construct the serving_config path using the correct multi-region location
         self.serving_config = self.client.serving_config_path(
             project=self.project_id,
-            location=self.location,
+            location=self.discovery_engine_location,
             data_store=self.data_store_id,
-            serving_config="default"
+            serving_config="default_config"
         )
+        logger.info(f"Using serving config: {self.serving_config}")
         logger.info("VertexSearchClient initialized.")
 
     def search(self, query: str) -> str:
@@ -42,19 +52,17 @@ class VertexSearchClient:
             request = discoveryengine.SearchRequest(
                 serving_config=self.serving_config,
                 query=query,
-                page_size=5  # Limit to 5 results for brevity
+                page_size=5
             )
             response = self.client.search(request)
 
             context_snippets = []
             for result in response.results:
                 if result.document and result.document.derived_struct_data:
-                    # Extract snippet from the document if available
                     snippet = result.document.derived_struct_data.get("snippet", "")
                     if snippet:
                         context_snippets.append(snippet)
                     else:
-                        # Fallback to content if no specific snippet
                         content = result.document.derived_struct_data.get("content", "")
                         if content:
                             context_snippets.append(content)

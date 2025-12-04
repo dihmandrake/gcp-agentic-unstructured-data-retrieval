@@ -38,9 +38,10 @@ A Python-based skeleton for a RAG (Retrieval-Augmented Generation) system. It ha
 
 5.  **Authenticate with Google Cloud:**
     *   Ensure you have the [Google Cloud SDK](httpss://cloud.google.com/sdk/docs/install) installed.
-    *   Enable the AI Platform service:
+    *   Enable the AI Platform and Discovery Engine services:
         ```bash
         gcloud services enable aiplatform.googleapis.com
+        gcloud services enable discoveryengine.googleapis.com
         ```
     *   Log in with your application-default credentials:
         ```bash
