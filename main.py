@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from src.ingestion.pipeline import run_ingestion
 from src.agents.rag_agent import RAGAgent
 from src.shared.logger import setup_logger
+from src.shared.validator import validate_datastore
 
 logger = setup_logger(__name__)
 load_dotenv()
@@ -14,11 +15,12 @@ def main():
     args = parser.parse_args()
 
     project_id = os.getenv("PROJECT_ID")
-    location = os.getenv("LOCATION")
+    location = os.getenv("LOCATION") # This should be 'us', 'eu', or 'global' for the validator
+    data_store_id = os.getenv("DATA_STORE_ID")
 
-    if not all([project_id, location]):
-        logger.error("Missing PROJECT_ID or LOCATION environment variables.")
-        raise ValueError("PROJECT_ID and LOCATION must be set in the .env file.")
+    if not all([project_id, location, data_store_id]):
+        logger.error("Missing PROJECT_ID, LOCATION, or DATA_STORE_ID environment variables.")
+        raise ValueError("PROJECT_ID, LOCATION, and DATA_STORE_ID must be set in the .env file.")
 
     if args.mode == "ingest":
         logger.info("Starting ingestion mode...")
@@ -27,6 +29,9 @@ def main():
         run_ingestion(input_dir, output_dir)
         logger.info("Ingestion mode finished.")
     elif args.mode == "chat":
+        # Validate the datastore before starting the agent
+        validate_datastore(project_id, location, data_store_id)
+        
         logger.info("Starting chat mode...")
         agent = RAGAgent(project_id=project_id, location=location)
         print("\n--- RAG Chatbot ---\nType 'exit' to quit.\n")
