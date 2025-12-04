@@ -36,7 +36,17 @@ A Python-based skeleton for a RAG (Retrieval-Augmented Generation) system. It ha
         DATA_STORE_ID="your-vertex-search-datastore-id"
         ```
 
-5.  **Authenticate with Google Cloud:**
+5.  **Create GCS Bucket:**
+    *   Create a GCS bucket to store the processed data. Use the `gsutil mb` command, replacing `"your-gcp-project-id"` and `"your-bucket-name"` with your actual project ID and a unique bucket name:
+        ```bash
+        gsutil mb -p "your-gcp-project-id" gs://
+        ```
+    *   Add the bucket name to your `.env` file:
+        ```
+        GCS_BUCKET_NAME="your-bucket-name"
+        ```
+
+6.  **Authenticate with Google Cloud:**
     *   Ensure you have the [Google Cloud SDK](httpss://cloud.google.com/sdk/docs/install) installed.
     *   Enable the AI Platform and Discovery Engine services:
         ```bash

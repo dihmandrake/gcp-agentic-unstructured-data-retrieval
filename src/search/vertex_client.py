@@ -21,14 +21,14 @@ class VertexSearchClient:
             raise ValueError("Missing required environment variables for VertexSearchClient.")
 
         # Set the API endpoint based on the location from .env
-        api_endpoint = f"{self.location}-discoveryengine.googleapis.com"
-        client_options = ClientOptions(api_endpoint=api_endpoint)
+        self.api_endpoint = f"{self.location}-discoveryengine.googleapis.com"
+        self.client_options = ClientOptions(api_endpoint=self.api_endpoint)
 
-        logger.info(f"VertexSearchClient initializing with endpoint: {api_endpoint}")
-        self.client = discoveryengine.SearchServiceClient(client_options=client_options)
+        logger.info(f"VertexSearchClient initializing with endpoint: {self.api_endpoint}")
+        self.search_client = discoveryengine.SearchServiceClient(client_options=self.client_options)
         
         # Construct the serving_config path using the location from .env
-        self.serving_config = self.client.serving_config_path(
+        self.serving_config = self.search_client.serving_config_path(
             project=self.project_id,
             location=self.location,
             data_store=self.data_store_id,
@@ -40,12 +40,6 @@ class VertexSearchClient:
     def search(self, query: str) -> str:
         """
         Executes a search query against the Vertex AI Search data store.
-
-        Args:
-            query (str): The search query string.
-
-        Returns:
-            str: A consolidated string of "Context" to feed the LLM.
         """
         try:
             request = discoveryengine.SearchRequest(
@@ -53,7 +47,7 @@ class VertexSearchClient:
                 query=query,
                 page_size=5
             )
-            response = self.client.search(request)
+            response = self.search_client.search(request)
 
             context_snippets = []
             for result in response.results:
@@ -73,3 +67,42 @@ class VertexSearchClient:
         except Exception as e:
             logger.error(f"Error during Vertex AI Search for query '{query}': {e}")
             return "Error retrieving documents from Vertex AI Search."
+
+    def import_from_gcs(self, gcs_uri: str):
+        """
+        Imports documents from a GCS URI into the Vertex AI Search data store.
+        """
+        try:
+            document_service_client = discoveryengine.DocumentServiceClient(client_options=self.client_options)
+            parent = document_service_client.branch_path(
+                project=self.project_id,
+                location=self.location,
+                data_store=self.data_store_id,
+                branch="default_branch",
+            )
+
+            request = discoveryengine.ImportDocumentsRequest(
+                parent=parent,
+                gcs_source=discoveryengine.GcsSource(
+                    input_uris=[gcs_uri],
+                    data_schema="document"
+                ),
+                reconciliation_mode=discoveryengine.ImportDocumentsRequest.ReconciliationMode.INCREMENTAL,
+            )
+
+            operation = document_service_client.import_documents(request=request)
+            logger.info(f"Waiting for document import from GCS to complete: {operation.operation.name}")
+            response = operation.result()
+            
+            metadata = operation.metadata
+            logger.info("Document import from GCS completed successfully.")
+            logger.info(f"Success count: {metadata.success_count}")
+            logger.info(f"Failure count: {metadata.failure_count}")
+            if metadata.failure_count > 0:
+                # Note: Error samples are in the response, not metadata
+                for i, sample in enumerate(response.error_samples):
+                    logger.error(f"Error sample {i+1}: {sample}")
+
+        except Exception as e:
+            logger.error(f"Error during GCS import to Vertex AI Search: {e}")
+            raise

@@ -1,32 +1,25 @@
-[project]
-name = "nelly-hackathon-mvp"
-version = "0.1.0"
-description = "A Python-based skeleton for a RAG (Retrieval-Augmented Generation) system."
-authors = [
-    {name = "Gemini"}
-]
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-    "python-dotenv>=1.0.0",
-    "google-cloud-discoveryengine>=0.15.0,<0.16.0",
-    "google-cloud-aiplatform>=1.55.0,<2.0.0",
-    "pypdf>=3.17.0",
-]
-
 [tool.poetry]
-packages = [
-    { include = "src" },
-]
+name = "gcp-agentic-unstructured-data-retrieval"
+version = "0.1.0"
+description = "A Python-based skeleton for a RAG system using GCP's Vertex AI and Discovery Engine."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+google-cloud-aiplatform = "^1.47.0"
+google-cloud-discoveryengine = "^0.10.0"
+pypdf = "^4.1.0"
+python-dotenv = "^1.0.1"
+ipykernel = "^6.29.4"
+google-cloud-storage = "^2.16.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.1.0"
-mypy = "^1.0"
-deptry = "^0.16.0"
-
-[tool.deptry]
-exclude = ["src", "vertexai", "dotenv", "google"]
+ruff = "^0.1.15"
+mypy = "^1.8.0"
+deptry = "^0.15.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
