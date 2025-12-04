@@ -4,6 +4,7 @@ from glob import glob
 from google.cloud import storage
 from src.shared.logger import setup_logger
 from src.search.vertex_client import VertexSearchClient
+from src.shared.sanitizer import sanitize_id
 
 logger = setup_logger(__name__)
 
@@ -44,7 +45,8 @@ def run_ingestion(input_dir: str, output_dir: str):
             logger.info(f"Uploaded {file_name} to {gcs_uri}")
 
             # Create metadata entry
-            doc_id = os.path.splitext(file_name)[0].replace(" ", "_")
+            base_name = os.path.splitext(file_name)[0]
+            doc_id = sanitize_id(base_name)
             metadata_list.append({
                 "id": doc_id,
                 "structData": {"source_file": file_name},
