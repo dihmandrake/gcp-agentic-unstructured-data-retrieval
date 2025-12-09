@@ -1,4 +1,4 @@
-# How the Nelly Hackathon Agent Works
+# How the Agent Works
 
 This document breaks down the key components of the agent, explaining how it understands user questions, searches for information, and generates answers.
 
@@ -8,7 +8,7 @@ The agent is built using the **Google Agent Development Kit (ADK)**. It follows 
 
 1.  The user's question is given to a Large Language Model (LLM).
 2.  The LLM is instructed to **always** use a `search_knowledge_base` tool to find information.
-3.  The tool queries a **Vertex AI Search** datastore containing your private documents (the "Nelly Hackathon Proposal" and "Shopping cart" PDFs).
+3.  The tool queries a **Vertex AI Search** datastore containing your private documents.
 4.  The search results are returned to the LLM as context.
 5.  The LLM uses this context to generate a final, user-facing answer.
 
@@ -26,27 +26,18 @@ This file is responsible for starting the application. When run in `chat` mode, 
 
 ```python
 # main.py
-
-import asyncio
-from google.adk.runners import InMemoryRunner
-from src.agents.adk_agent import agent_config
-# ... other imports
-
 def run_chat_mode():
     logger.info("Initializing ADK Chat...")
     print("--- Nelly ADK Chatbot ---")
     print("Type 'exit' to quit.")
     
-    # 1. The runner is initialized with our agent's configuration
     runner = InMemoryRunner(agent=agent_config)
     
-    # 2. An async chat loop is started to handle user input
     async def chat():
         while True:
             user_input = input("\nYou: ")
             if user_input.lower() in ["exit", "quit"]:
                 break
-            # 3. The runner's run_debug method processes the input
             await runner.run_debug(user_input)
 
     asyncio.run(chat())
@@ -60,30 +51,32 @@ This file defines the agent's core identity, including its instructions, the LLM
 
 ```python
 # src/agents/adk_agent.py
-
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from src.agents.tools import search_knowledge_base
-from google.generativeai import types
+from google.genai import types
 
-# 1. The system prompt defines the agent's rules and persona
-system_prompt = """You are a helpful AI assistant for the Nelly Hackathon.
-Your knowledge comes exclusively from the "search_knowledge_base" tool.
-ALWAYS use the tool to find information before answering.
-If the user asks about "Nelly", "proposals", or "hackathons", search first."""
+system_prompt = """
+# =================================================================================================
+# TODO: HACKATHON CHALLENGE (Pillar 1: Completeness) 
+# ... (instructions for enhancing the persona) ...
+# =================================================================================================
 
-# 2. The Gemini model is configured
+You are a helpful AI assistant.
+Your knowledge comes exclusively from the documents provided to you via the "search_knowledge_base" tool.
+You must ALWAYS use the "search_knowledge_base" tool to find information before answering any question.
+Do not rely on any prior knowledge."""
+
 model_config = Gemini(
     model="gemini-2.0-flash-lite",
 )
 
-# 3. The final agent configuration is assembled
 agent_config = Agent(
     name="nelly_agent",
     model=model_config,
     instruction=system_prompt,
-    generate_content_config=types.GenerationConfig(temperature=0),
-    tools=[search_knowledge_base], # The search tool is attached here
+    generate_content_config=types.GenerateContentConfig(temperature=0),
+    tools=[search_knowledge_base],
 )
 ```
 
@@ -95,14 +88,14 @@ This file defines the `search_knowledge_base` tool that the agent uses. The ADK 
 
 ```python
 # src/agents/tools.py
-
-from google.adk.tools.function_tool import FunctionTool
 from src.search.vertex_client import VertexSearchClient
-# ... other imports
+from src.shared.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 search_client = VertexSearchClient()
 
-def _search_knowledge_base(query: str) -> str:
+def search_knowledge_base(query: str) -> str:
     """
     Searches the Nelly Hackathon knowledge base to find information and answer user questions.
 
@@ -111,25 +104,20 @@ def _search_knowledge_base(query: str) -> str:
     """
     logger.info(f"Tool call: search_knowledge_base with query: {query}")
     return search_client.search(query)
-
-# The function is wrapped in a FunctionTool object for the ADK
-search_knowledge_base = FunctionTool(func=_search_knowledge_base)
 ```
 
 ### d. Search Client: `src/search/vertex_client.py`
 
 This is the lowest-level component, responsible for communicating with the Google Cloud Vertex AI Search API.
 
--   **What it does:** It constructs a search request using the user's query and sends it directly to your specific **Data Store**. By targeting the datastore directly (instead of a broader "Engine"), we ensure that the search is strictly limited to the documents you have ingested. It then processes the response to extract the most relevant snippets or paragraphs.
+-   **What it does:** It constructs a search request using the user's query and sends it directly to your specific **Data Store**. By targeting the datastore directly, we ensure that the search is strictly limited to the documents you have ingested. It then processes the response to extract the most relevant snippets or paragraphs.
 
 ```python
 # src/search/vertex_client.py
-
 class VertexSearchClient:
     def __init__(self):
         # ... initialization ...
         
-        # 1. The serving_config path is built to target the specific data store
         self.serving_config = self.search_client.serving_config_path(
             project=self.project_id,
             location=self.location,
@@ -140,20 +128,16 @@ class VertexSearchClient:
 
     def search(self, query: str) -> str:
         # ...
-            # 2. The request is created with the datastore-specific serving_config
+            # TODO: HACKATHON CHALLENGE for Hybrid Search or Metadata Filtering
+            
             request = discoveryengine.SearchRequest(
                 serving_config=self.serving_config,
                 query=query,
-                page_size=5,
-                content_search_spec=content_search_spec,
+                # ...
             )
-            # 3. The search client sends the request
             response = self.search_client.search(request)
 
-            # 4. The response is processed to extract text snippets
-            context_snippets = []
-            for result in response.results:
-                # ... logic to extract content ...
+            # ... logic to extract content ...
             
             consolidated_context = "\n\n".join(context_snippets)
             return consolidated_context if consolidated_context else "No relevant documents found."
