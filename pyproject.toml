@@ -12,7 +12,7 @@ google-cloud-aiplatform = "^1.47.0"
 google-cloud-discoveryengine = "^0.10.0"
 pypdf = "^4.1.0"
 python-dotenv = "^1.0.1"
-ipykernel = "^6.29.4"
+
 google-cloud-storage = "^2.16.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -23,3 +23,6 @@ deptry = "^0.15.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.deptry]
+known_first_party = ["src"]
