@@ -18,7 +18,12 @@ check: # Check lock file consistency and run static code analysis
 	@echo "🚀 Checking for obsolete dependencies: Running deptry"
 	@poetry run deptry src/
 
+.PHONY: create-datastore
+create-datastore: # Create the Vertex AI Search Data Store using the provided script
+	@echo "🚀 Creating Vertex AI Search Data Store..."
+	@bash scripts/create_datastore.sh
+
 .PHONY: create-engine
-create-engine: # Create the Enterprise Search Engine using the provided script
-	@echo "🚀 Creating Enterprise Search Engine..."
+create-engine: # Create the Enterprise Search App (Engine) using the provided script
+	@echo "🚀 Creating Enterprise Search App (Engine)..."
 	@poetry run python scripts/create_enterprise_engine.py
