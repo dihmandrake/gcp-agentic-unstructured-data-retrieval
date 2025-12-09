@@ -1,6 +1,6 @@
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part, Tool, FunctionDeclaration
-from src.agents.tools import retrieve_documents
+from src.agents.tools import search_knowledge_base
 from src.shared.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -15,17 +15,17 @@ class RAGAgent:
         vertexai.init(project=project_id, location=vertex_ai_region)
         
         # 2. Manually define the tool as per Vertex AI SDK requirements
-        retrieve_documents_tool = Tool(
+        search_tool = Tool(
             function_declarations=[
                 FunctionDeclaration(
-                    name="retrieve_documents",
-                    description="Retrieves relevant documents from the knowledge base.",
+                    name="search_knowledge_base",
+                    description="Searches the knowledge base to find information and answer user questions.",
                     parameters={
                         "type": "object",
                         "properties": {
                             "query": {
                                 "type": "string",
-                                "description": "The search query to find relevant documents."
+                                "description": "A detailed search query crafted from the user's question to find relevant information."
                             }
                         },
                         "required": ["query"]
@@ -35,9 +35,16 @@ class RAGAgent:
         )
         
         # 3. Initialize Model with Tools
+        system_instruction = """You are a helpful AI assistant for the Nelly Hackathon.
+Your knowledge comes exclusively from the "search_knowledge_base" tool.
+ALWAYS use the "search_knowledge_base" tool to find information before answering.
+If the user asks about "Nelly", "proposals", or "hackathons", you MUST search the knowledge base first.
+Do not refuse to answer; try to search first."""
+
         self.model = GenerativeModel(
             model_name,
-            tools=[retrieve_documents_tool],
+            tools=[search_tool],
+            system_instruction=system_instruction
         )
         
         # 4. Start Chat Session
@@ -55,8 +62,8 @@ class RAGAgent:
         if function_call:
             logger.info(f"Model called tool: {function_call.name} with args: {function_call.args}")
             
-            if function_call.name == "retrieve_documents":
-                tool_result = retrieve_documents(query=function_call.args["query"])
+            if function_call.name == "search_knowledge_base":
+                tool_result = search_knowledge_base(query=function_call.args["query"])
                 
                 response = self.chat.send_message(
                     Part.from_function_response(

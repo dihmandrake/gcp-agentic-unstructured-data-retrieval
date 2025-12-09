@@ -3,9 +3,9 @@ from src.shared.logger import setup_logger
 
 logger = setup_logger(__name__)
 
-def retrieve_documents(query: str) -> str:
+def search_knowledge_base(query: str) -> str:
     """
-    Retrieves relevant documents using the VertexSearchClient.
+    Searches the knowledge base using the VertexSearchClient.
 
     Args:
         query (str): The search query.
@@ -13,6 +13,6 @@ def retrieve_documents(query: str) -> str:
     Returns:
         str: Consolidated context from retrieved documents.
     """
-    logger.info(f"Tool call: retrieve_documents with query: {query}")
+    logger.info(f"Tool call: search_knowledge_base with query: {query}")
     vertex_search_client = VertexSearchClient()
     return vertex_search_client.search(query)
