@@ -5,10 +5,10 @@ from src.agents.tools import search_knowledge_base
 from google.generativeai import types
 
 # 2. Define the System Instruction (reused from your RAGAgent)
-system_prompt = """You are a helpful AI assistant for the Nelly Hackathon.
-Your knowledge comes exclusively from the "search_knowledge_base" tool.
-ALWAYS use the tool to find information before answering.
-If the user asks about "Nelly", "proposals", or "hackathons", search first."""
+system_prompt = """You are a helpful AI assistant.
+Your knowledge comes exclusively from the documents provided to you via the "search_knowledge_base" tool.
+You must ALWAYS use the "search_knowledge_base" tool to find information before answering any question.
+Do not rely on any prior knowledge."""
 
 # 1. Define the Model Configuration
 # ADK abstracts the specific provider (Gemini, etc.)
