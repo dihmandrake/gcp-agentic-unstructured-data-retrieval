@@ -1,8 +1,8 @@
 # Extensible RAG Agent with Vertex AI Search
 
-This repository provides a robust, production-ready foundation for a Retrieval-Augmented Generation (RAG) system built on Google Cloud. It uses the Google Agent Development Kit (ADK) to power a conversational agent that can reason over unstructured data, like PDFs, that has been indexed in Vertex AI Search.
+This repository provides a starting point for a Retrieval-Augmented Generation (RAG) system built on Google Cloud. It uses the Google Agent Development Kit (ADK) to create a conversational agent that can reason over unstructured data, like PDFs, indexed in Vertex AI Search.
 
-The codebase is designed to be both a functional starting point and a launchpad for further extension. It currently handles PDF ingestion and provides a basic chat interface, with clear `TODO` markers and challenges for developers to enhance its capabilities.
+The codebase is intended as a functional example that can be extended. It currently handles PDF ingestion and provides a basic chat interface, with `TODO` markers and challenges included to guide developers in enhancing its capabilities.
 
 ---
 

@@ -36,7 +36,7 @@ A common challenge in building RAG bots is when the bot successfully identifies 
 -   **Returned Content:** Provides rich `extractive_segments` (relevant paragraphs) and `extractive_answers` (direct answers from the text).
 -   **Benefit for RAG:** Enables the LLM to receive large, contextually relevant portions of text, allowing it to accurately answer specific questions by reasoning over the actual document content. Our `create_enterprise_engine.py` script upgrades our setup to this tier.
 
-For an effective RAG application, the **Enterprise Edition is crucial**. It transforms a "nearsighted" bot that can only find documents into a comprehensive assistant that can understand the information within them.
+For an effective RAG application, the **Enterprise Edition is recommended**. It provides the native capabilities for the agent to properly reason over the content within the documents.
 
 ---
 

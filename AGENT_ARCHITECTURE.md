@@ -4,7 +4,7 @@ This document breaks down the key components of the agent, explaining how it und
 
 ## 1. Overview
 
-The agent is built using the **Google Agent Development Kit (ADK)**. It follows a simple but powerful pattern:
+The agent is built using the **Google Agent Development Kit (ADK)**. It follows a common pattern:
 
 1.  The user's question is given to a Large Language Model (LLM).
 2.  The LLM is instructed to **always** use a `search_knowledge_base` tool to find information.
@@ -47,7 +47,7 @@ def run_chat_mode():
 
 This file defines the agent's core identity, including its instructions, the LLM it uses, and the tools it has access to.
 
--   **What it does:** It creates an `Agent` configuration object. The `instruction` parameter is the most critical part, as it tells the model *how* to behave. It explicitly instructs the model to use the `search_knowledge_base` tool before answering any questions.
+-   **What it does:** It creates an `Agent` configuration object. The `instruction` parameter is an important part, as it tells the model *how* to behave. It explicitly instructs the model to use the `search_knowledge_base` tool before answering any questions.
 
 ```python
 # src/agents/adk_agent.py
@@ -84,7 +84,7 @@ agent_config = Agent(
 
 This file defines the `search_knowledge_base` tool that the agent uses. The ADK framework automatically makes this function available to the LLM.
 
--   **What it does:** It defines a simple Python function that takes a `query` string. The function's docstring is very important, as it's what the LLM reads to understand what the tool does. The function then calls our `VertexSearchClient` to perform the actual search.
+-   **What it does:** It defines a simple Python function that takes a `query` string. The function's docstring is important, as it's what the LLM reads to understand what the tool does. The function then calls our `VertexSearchClient` to perform the actual search.
 
 ```python
 # src/agents/tools.py
@@ -108,7 +108,7 @@ def search_knowledge_base(query: str) -> str:
 
 ### d. Search Client: `src/search/vertex_client.py`
 
-This is the lowest-level component, responsible for communicating with the Google Cloud Vertex AI Search API.
+This component is responsible for communicating with the Google Cloud Vertex AI Search API.
 
 -   **What it does:** It constructs a search request using the user's query and sends it directly to your specific **Data Store**. By targeting the datastore directly, we ensure that the search is strictly limited to the documents you have ingested. It then processes the response to extract the most relevant snippets or paragraphs.
 

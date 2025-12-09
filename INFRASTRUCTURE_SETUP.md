@@ -2,8 +2,8 @@
 
 This guide provides the necessary scripts and instructions to provision the required Google Cloud infrastructure for this application. The setup is a two-step process:
 
-1.  **Create a Vertex AI Search Data Store:** This is the "memory" where your unstructured documents (PDFs) will be stored and indexed.
-2.  **Create an Enterprise Search App (Engine):** This is the "brain" that sits on top of the Data Store and provides the advanced RAG capabilities (`extractive_segments`) needed by the agent.
+1.  **Create a Vertex AI Search Data Store:** This is where your unstructured documents (PDFs) will be stored and indexed.
+2.  **Create an Enterprise Search App (Engine):** This sits on top of the Data Store and provides the advanced RAG capabilities (`extractive_segments`) needed by the agent.
 
 ---
 
@@ -40,7 +40,7 @@ This script wraps the Data Store you created in Step 1 with an Enterprise-tier A
 
 This process can take 1-2 minutes to complete.
 
-### Critical Final Step: Update Application Code
+### Important Final Step: Update Application Code
 
 After the Enterprise App is created, you must update the application's code to point to it.
 
