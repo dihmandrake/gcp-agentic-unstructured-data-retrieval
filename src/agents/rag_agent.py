@@ -58,20 +58,29 @@ Do not refuse to answer; try to search first."""
         logger.info(f"User question: {question}")
         response = self.chat.send_message(question)
         
-        function_call = response.candidates[0].content.parts[0].function_call
+        # Gemini 2.0 might return Text + FunctionCall. We must find the function call part.
+        function_call = None
+        for part in response.candidates[0].content.parts:
+            if part.function_call:
+                function_call = part.function_call
+                break
+        
+        # If we found a tool call, execute it
         if function_call:
             logger.info(f"Model called tool: {function_call.name} with args: {function_call.args}")
             
             if function_call.name == "search_knowledge_base":
                 tool_result = search_knowledge_base(query=function_call.args["query"])
                 
+                # Send the tool result back to the model
                 response = self.chat.send_message(
                     Part.from_function_response(
-                        name=function_call.name,
+                        name="search_knowledge_base",
                         response={"content": tool_result}
                     )
                 )
 
+        # Now it is safe to get the final answer
         final_response = response.text
         logger.info(f"Agent final response: {final_response}")
         return final_response
