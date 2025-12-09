@@ -42,6 +42,29 @@ class VertexSearchClient:
         Executes a search query against the Vertex AI Search data store.
         """
         try:
+            # =================================================================================================
+            # TODO: HACKATHON CHALLENGE (Pillar 1: Completeness)
+            #
+            # The current search is a basic keyword search. Your challenge is to enhance it using
+            # Vertex AI Search's advanced capabilities.
+            #
+            # REQUIREMENT: You must implement ONE of the following search enhancements:
+            #
+            #   1. HYBRID SEARCH:
+            #      - Combine keyword-based search with vector-based (semantic) search.
+            #      - This typically involves setting `query_expansion_spec` and `spell_correction_spec`
+            #        in the `SearchRequest` to leverage Vertex AI's built-in capabilities.
+            #      - HINT: Explore `query_expansion_spec` and `spell_correction_spec` within
+            #        `discoveryengine.SearchRequest`.
+            #
+            #   2. METADATA FILTERING:
+            #      - Allow the search to be filtered based on document metadata (e.g., `source_file`, `page_number`).
+            #      - This requires adding a `filter` parameter to the `SearchRequest`.
+            #      - HINT: The `filter` parameter accepts a string with filter conditions, e.g.,
+            #        `"structData.source_file:exact_match('medical_record_John_Doe.pdf')"`.
+            #
+            # =================================================================================================
+
             content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
                 snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
                     return_snippet=True

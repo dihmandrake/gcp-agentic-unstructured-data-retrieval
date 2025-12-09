@@ -6,6 +6,7 @@ from google.cloud import storage
 from src.shared.logger import setup_logger
 from src.search.vertex_client import VertexSearchClient
 from src.shared.sanitizer import sanitize_id
+from src.ingestion.parser import parse_pdf, parse_other_format # Import the new parser
 
 logger = setup_logger(__name__)
 
@@ -23,18 +24,33 @@ def run_ingestion(input_dir: str, output_dir: str):
         return
 
     os.makedirs(output_dir, exist_ok=True)
-    pdf_files = glob(os.path.join(input_dir, "*.pdf"))
+    
+    # =================================================================================================
+    # TODO: HACKATHON CHALLENGE (Pillar 2: Extensibility)
+    #
+    # The current pipeline only processes PDF files. Your challenge is to extend it to support
+    # the new file format you implemented in `src/ingestion/parser.py`.
+    #
+    # REQUIREMENTS:
+    #   1. Modify the `glob` pattern below to include your new file type (e.g., "*.pdf", "*.txt").
+    #   2. Implement logic within the loop to detect the file type and call the appropriate
+    #      parser function (`parse_pdf` or `parse_other_format`).
+    #   3. Ensure the `mimeType` in the `metadata_list` entry is correctly set for your new file type.
+    #
+    # HINT: You can use `file_name.lower().endswith(".your_extension")` to check the file type.
+    # =================================================================================================
+    all_files = glob(os.path.join(input_dir, "*.pdf")) # Extend this glob to include your new file type
 
-    if not pdf_files:
-        logger.warning(f"No PDF files found in input directory: {input_dir}")
+    if not all_files:
+        logger.warning(f"No files found in input directory: {input_dir}")
         return
 
     storage_client = storage.Client()
     bucket = storage_client.bucket(gcs_bucket_name)
     metadata_list = []
 
-    logger.info(f"--- Uploading {len(pdf_files)} PDF files to GCS ---")
-    for file_path in pdf_files:
+    logger.info(f"--- Uploading {len(all_files)} files to GCS ---")
+    for file_path in all_files:
         try:
             file_name = os.path.basename(file_path)
             gcs_raw_path = f"raw/{file_name}"
@@ -46,11 +62,19 @@ def run_ingestion(input_dir: str, output_dir: str):
 
             base_name = os.path.splitext(file_name)[0]
             doc_id = sanitize_id(base_name)
+            
+            # Determine mimeType based on file extension
+            mime_type = "application/pdf" # Default to PDF, update this based on your new file type logic
+            # if file_name.lower().endswith(".txt"):
+            #     mime_type = "text/plain"
+            # elif file_name.lower().endswith(".csv"):
+            #     mime_type = "text/csv"
+
             metadata_list.append({
                 "id": doc_id,
                 "structData": {"source_file": file_name},
                 "content": {
-                    "mimeType": "application/pdf",
+                    "mimeType": mime_type,
                     "uri": gcs_uri
                 }
             })
@@ -76,27 +100,36 @@ def run_ingestion(input_dir: str, output_dir: str):
         logger.error(f"Failed to trigger Vertex AI import: {e}")
 
     # Also generate a local processed_data.json for chunking visibility
-    _generate_local_processed_data(pdf_files, output_dir)
+    _generate_local_processed_data(all_files, output_dir)
 
-def _generate_local_processed_data(pdf_files: list[str], output_dir: str):
+def _generate_local_processed_data(files: list[str], output_dir: str):
     """
-    Parses PDFs locally and saves the output to a JSON file for inspection.
+    Parses files locally and saves the output to a JSON file for inspection.
     This is a simulation of the chunking that Vertex AI would perform.
     """
     logger.info("--- Generating local processed_data.json for chunking visibility ---")
     processed_data = []
 
-    for file_path in pdf_files:
+    for file_path in files:
         try:
             file_name = os.path.basename(file_path)
-            reader = pypdf.PdfReader(file_path)
-            for i, page in enumerate(reader.pages):
+            text_content = ""
+            if file_name.lower().endswith(".pdf"):
+                reader = pypdf.PdfReader(file_path)
+                for page in reader.pages:
+                    text_content += page.extract_text() + "\n"
+            else:
+                # TODO: HACKATHON CHALLENGE (Pillar 2: Extensibility)
+                # Call your new parser function here for other file types.
+                # Example: text_content = parse_other_format(file_path)
+                text_content = parse_other_format(file_path) # Placeholder
+
+            if text_content:
                 processed_data.append({
-                    "id": sanitize_id(f"{file_name}_page_{i+1}"),
+                    "id": sanitize_id(f"{file_name}"),
                     "structData": {
-                        "text_content": page.extract_text(),
+                        "text_content": text_content,
                         "source_file": file_name,
-                        "page_number": i + 1,
                     }
                 })
         except Exception as e:
@@ -108,4 +141,3 @@ def _generate_local_processed_data(pdf_files: list[str], output_dir: str):
             f.write(json.dumps(entry) + "\n")
     
     logger.info(f"Local processed data saved to: {output_file_path}")
-

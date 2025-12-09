@@ -19,8 +19,42 @@ def parse_pdf(file_path: str) -> str:
         for page in reader.pages:
             text += page.extract_text() + "\n"
         logger.info(f"Successfully parsed PDF: {file_path}")
-        # TODO: Implement OCR for scanned documents here if needed in the future.
+        # TODO: HACKATHON CHALLENGE (Optional, but good for completeness)
+        # If you want to handle scanned PDFs (images of text), you would integrate an OCR (Optical Character Recognition)
+        # library here, such as Google Cloud Vision AI or Tesseract. This is not a core requirement for the hackathon,
+        # but a valuable extension for real-world unstructured data.
         return text
     except Exception as e:
         logger.error(f"Error parsing PDF {file_path}: {e}")
         raise
+
+def parse_other_format(file_path: str) -> str:
+    """
+    Placeholder for parsing other document formats.
+
+    Args:
+        file_path (str): The absolute path to the file.
+
+    Returns:
+        str: The extracted text content.
+    """
+    # =================================================================================================
+    # TODO: HACKATHON CHALLENGE (Pillar 2: Extensibility)
+    #
+    # This function is a placeholder. Your challenge is to implement logic to parse at least one
+    # new file format (e.g., .txt, .csv, .docx, .html) beyond PDFs.
+    #
+    # REQUIREMENTS:
+    #   1. Choose a new file format to support (e.g., plain text, CSV, Word document, HTML).
+    #   2. Implement the necessary code to read the content of that file type and return it as a string.
+    #   3. You may need to install new libraries (e.g., `python-docx` for .docx, `pandas` for .csv).
+    #      Remember to add any new dependencies to `pyproject.toml` and install them with `poetry install`.
+    #   4. Ensure robust error handling for unsupported formats or corrupted files.
+    #
+    # HINT: For simple text files, you can just read the file content directly.
+    #       For CSV, you might read it into a pandas DataFrame and then convert it to a string representation.
+    #       For HTML, you could use BeautifulSoup to extract visible text.
+    #
+    # =================================================================================================
+    logger.warning(f"Parsing for {file_path} is not yet implemented. Returning empty string.")
+    return "" # Placeholder, replace with actual parsing logic
