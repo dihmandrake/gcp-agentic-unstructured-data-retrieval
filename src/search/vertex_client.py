@@ -42,23 +42,48 @@ class VertexSearchClient:
         Executes a search query against the Vertex AI Search data store.
         """
         try:
+            content_search_spec = discoveryengine.SearchRequest.ContentSearchSpec(
+                snippet_spec=discoveryengine.SearchRequest.ContentSearchSpec.SnippetSpec(
+                    return_snippet=True
+                ),
+                # REMOVED: extractive_content_spec is Enterprise only.
+            )
+
             request = discoveryengine.SearchRequest(
                 serving_config=self.serving_config,
                 query=query,
-                page_size=5
+                page_size=5,
+                content_search_spec=content_search_spec,
             )
             response = self.search_client.search(request)
 
             context_snippets = []
             for result in response.results:
-                if result.document and result.document.derived_struct_data:
-                    snippet = result.document.derived_struct_data.get("snippet", "")
-                    if snippet:
-                        context_snippets.append(snippet)
-                    else:
-                        content = result.document.derived_struct_data.get("content", "")
-                        if content:
-                            context_snippets.append(content)
+                if not result.document or not result.document.derived_struct_data:
+                    continue
+
+                data = result.document.derived_struct_data
+
+                # Debug: Print available keys to see where the data is hiding
+                logger.info(f"Document keys found: {list(data.keys())}")
+
+                # 1. Check for Extractive Answers (Q&A style)
+                if data.get("extractive_answers"):
+                    for answer in data["extractive_answers"]:
+                        context_snippets.append(answer.get("content", ""))
+                
+                # 2. Check for Extractive Segments (Common for PDFs)
+                elif data.get("extractive_segments"):
+                    for segment in data["extractive_segments"]:
+                        context_snippets.append(segment.get("content", ""))
+
+                # 3. Fallback to Snippets
+                elif data.get("snippets"):
+                    for snippet in data["snippets"]:
+                        context_snippets.append(snippet.get("snippet", ""))
+
+            # Filter out any potential empty strings from the results
+            context_snippets = [s for s in context_snippets if s]
 
             consolidated_context = "\n\n".join(context_snippets)
             logger.info(f"Search query '{query}' returned {len(context_snippets)} context snippets.")
