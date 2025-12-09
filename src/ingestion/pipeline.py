@@ -1,6 +1,7 @@
 import os
 import json
 from glob import glob
+import pypdf
 from google.cloud import storage  # type: ignore  # type: ignore
 from src.shared.logger import setup_logger
 from src.search.vertex_client import VertexSearchClient
@@ -78,3 +79,38 @@ def run_ingestion(input_dir: str, output_dir: str):
         vertex_client.import_from_gcs(metadata_gcs_uri)
     except Exception as e:
         logger.error(f"Failed to trigger Vertex AI import: {e}")
+
+    # Also generate a local processed_data.json for chunking visibility
+    _generate_local_processed_data(pdf_files, output_dir)
+
+def _generate_local_processed_data(pdf_files: list[str], output_dir: str):
+    """
+    Parses PDFs locally and saves the output to a JSON file for inspection.
+    This is a simulation of the chunking that Vertex AI would perform.
+    """
+    logger.info("--- Generating local processed_data.json for chunking visibility ---")
+    processed_data = []
+
+    for file_path in pdf_files:
+        try:
+            file_name = os.path.basename(file_path)
+            reader = pypdf.PdfReader(file_path)
+            for i, page in enumerate(reader.pages):
+                processed_data.append({
+                    "id": sanitize_id(f"{file_name}_page_{i+1}"),
+                    "structData": {
+                        "text_content": page.extract_text(),
+                        "source_file": file_name,
+                        "page_number": i + 1,
+                    }
+                })
+        except Exception as e:
+            logger.error(f"Failed to parse {file_path}: {e}")
+
+    output_file_path = os.path.join(output_dir, "processed_data.json")
+    with open(output_file_path, "w", encoding="utf-8") as f:
+        for entry in processed_data:
+            f.write(json.dumps(entry) + "\n")
+    
+    logger.info(f"Local processed data saved to: {output_file_path}")
+
