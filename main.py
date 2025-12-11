@@ -12,7 +12,10 @@ logger = setup_logger(__name__)
 
 def run_chat_mode():
     logger.info("Initializing ADK Chat...")
-    print("--- Nelly ADK Chatbot ---")
+    import os
+
+app_name = os.getenv("APP_NAME", "GenAI-RAG")
+    print(f"--- {app_name} ADK Chatbot ---")
     print("Type 'exit' to quit.")
     
     runner = InMemoryRunner(agent=agent_config)
@@ -30,7 +33,7 @@ def run_chat_mode():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Nelly RAG Agent CLI")
+    parser = argparse.ArgumentParser(description=f"{app_name} RAG Agent CLI")
     parser.add_argument(
         "--mode",
         choices=["chat", "ingest"],
