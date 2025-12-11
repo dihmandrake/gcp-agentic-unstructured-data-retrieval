@@ -28,12 +28,24 @@ class VertexSearchClient:
         self.search_client = discoveryengine.SearchServiceClient(client_options=self.client_options)
         
         # Construct the serving_config path to target the data store directly
-        self.serving_config = self.search_client.serving_config_path(
-            project=self.project_id,
-            location=self.location,
-            data_store=self.data_store_id,
-            serving_config="default_config",
-        )
+        # The serving config depends on whether an Engine is being used.
+        if self.engine_id:
+            # Use the Engine-based serving config.
+            self.serving_config = self.search_client.serving_config_path(
+                project=self.project_id,
+                location=self.location,
+                collection="default_collection",
+                engine=self.engine_id,
+                serving_config="default_config",
+            )
+        else:
+            # Use the Data Store-based serving config.
+            self.serving_config = self.search_client.serving_config_path(
+                project=self.project_id,
+                location=self.location,
+                data_store=self.data_store_id,
+                serving_config="default_config",
+            )
         logger.info(f"Using serving config: {self.serving_config}")
         logger.info("VertexSearchClient initialized.")
 

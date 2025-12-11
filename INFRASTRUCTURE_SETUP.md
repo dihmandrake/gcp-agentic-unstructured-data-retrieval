@@ -1,69 +1,52 @@
 # Infrastructure Setup Guide
 
-This guide provides the necessary scripts and instructions to provision the required Google Cloud infrastructure for this application. The setup is a two-step process:
+This guide provides instructions to provision the required Google Cloud infrastructure for this application. The setup is a two-step process that can be easily managed using the provided `Makefile`.
 
 1.  **Create a Vertex AI Search Data Store:** This is where your unstructured documents (PDFs) will be stored and indexed.
 2.  **Create an Enterprise Search App (Engine):** This sits on top of the Data Store and provides the advanced RAG capabilities (`extractive_segments`) needed by the agent.
 
 ---
 
-## Step 1: Create the Vertex AI Search Data Store
+## Automated Setup with `make`
 
-This script creates the foundational Data Store where your documents will live.
+The easiest way to provision your infrastructure is by using the `Makefile` commands from the root of the project.
 
 ### Instructions
 
-1.  **Ensure your `.env` file is configured** with your `PROJECT_ID`, `LOCATION`, and a unique `DATA_STORE_ID`.
-2.  **Authenticate with gcloud:** If you haven't already, run `gcloud auth application-default login`.
-3.  **Run the script from the project root:**
+1.  **Configure your environment:**
+    -   Ensure your `.env` file is correctly filled out with your `PROJECT_ID`, `LOCATION`, `DATA_STORE_ID`, and `ENGINE_ID`. The setup scripts will use these values.
 
+2.  **Authenticate with Google Cloud:**
+    -   If you haven't already, run `gcloud auth application-default login`.
+
+3.  **Run the infrastructure setup command:**
     ```bash
-    bash scripts/create_datastore.sh
+    make infra
     ```
-
-The script will use the variables from your `.env` file to create the Data Store in the correct project and location.
+    -   This command will run `make create-datastore` and `make create-engine` in the correct sequence. The process may take a few minutes to complete.
 
 ---
 
-## Step 2: Create the Enterprise Search App (Engine)
+## Manual Setup
 
-This script wraps the Data Store you created in Step 1 with an Enterprise-tier App, unlocking the necessary features for the RAG agent to extract meaningful context from your documents.
+If you prefer to run the scripts manually, follow these steps from the project root.
 
-### Instructions
+### Step 1: Create the Data Store
 
-1.  **Verify the configuration** at the top of the `scripts/create_enterprise_engine.py` file to ensure the `PROJECT_ID`, `LOCATION`, and `DATA_STORE_ID` match the resources from Step 1.
-2.  **Run the script from the project root:**
+```bash
+bash scripts/create_datastore.sh
+```
 
-    ```bash
-    poetry run python scripts/create_enterprise_engine.py
-    ```
+### Step 2: Create the Enterprise Search App
 
-This process can take 1-2 minutes to complete.
+```bash
+poetry run python scripts/create_enterprise_engine.py
+```
 
-### Important Final Step: Update Application Code
+---
 
-After the Enterprise App is created, you must update the application's code to point to it.
+## How It Works
 
-*   **File:** `src/search/vertex_client.py`
-*   **Action:** In the `__init__` method, find the line that defines `self.serving_config` and update it to point to the new **Engine** resource.
+The `create_datastore.sh` script provisions the foundational Data Store. The `create_enterprise_engine.py` script then wraps it with an Enterprise-tier App. This second step is crucial because it unlocks the `extractive_segments` feature, which allows the RAG agent to retrieve detailed text chunks from your documents instead of just summaries.
 
-    *   **Old Path (Standard):**
-        ```python
-        self.serving_config = self.search_client.serving_config_path(
-            project=self.project_id,
-            location=self.location,
-            data_store=self.data_store_id,
-            serving_config="default_config",
-        )
-        ```
-
-    *   **New Path (Enterprise):**
-        ```python
-        self.serving_config = self.search_client.serving_config_path(
-            project=self.project_id,
-            location=self.location,
-            collection="default_collection",
-            engine=os.getenv("ENGINE_ID"), # Assumes you add ENGINE_ID to your .env
-            serving_config="default_config",
-        )
-        ```
+The application code in `src/search/vertex_client.py` is already configured to automatically detect and use the `ENGINE_ID` from your `.env` file, so no manual code changes are required after provisioning.

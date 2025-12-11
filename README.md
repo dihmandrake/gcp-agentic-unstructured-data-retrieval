@@ -52,10 +52,10 @@ The application operates in two main modes:
     ```
 3.  **Configure environment variables:**
     -   Copy the example file: `cp .env.example .env`
-    -   Edit the `.env` file and add your Google Cloud project details (`PROJECT_ID`, `LOCATION`, `DATA_STORE_ID`, etc.).
+    -   Edit the `.env` file and add your Google Cloud project details (`PROJECT_ID`, `LOCATION`, `DATA_STORE_ID`, etc.). See the inline comments in the `.env` file for guidance on where to find these values.
 
 ### 3. Provision Cloud Infrastructure
-Before running the application, you must create the necessary Google Cloud resources. Follow the instructions in the **[INFRASTRUCTURE_SETUP.md](./INFRASTRUCTURE_SETUP.md)** guide.
+Before running the application, you must create the necessary Google Cloud resources. Follow the instructions in the **[INFRASTRUCTURE_SETUP.md](./INFRASTRUCTURE_SETUP.md)** guide. This can be done easily by using the included `Makefile` commands.
 
 ---
 
@@ -80,7 +80,8 @@ poetry run python main.py --mode chat
 
 This project includes a `Makefile` to streamline common tasks:
 
--   `make install`: Installs all project dependencies.
--   `make check`: Runs linting, static type checking, and other code quality checks.
--   `make create-datastore`: Runs the script to create the Vertex AI Search Data Store.
--   `make create-engine`: Runs the script to create the Enterprise Search App.
+-   `make install`: Installs all project dependencies using Poetry.
+-   `make check`: Runs linting and static type checking to ensure code quality.
+-   `make create-datastore`: Executes the script to provision the Vertex AI Search Data Store.
+-   `make create-engine`: Executes the script to create the Enterprise Search App, which wraps the Data Store.
+-   `make infra`: A convenience command that runs both `create-datastore` and `create-engine` in sequence.
