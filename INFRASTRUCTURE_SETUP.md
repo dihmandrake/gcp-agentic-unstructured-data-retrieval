@@ -1,6 +1,3 @@
-Here is the revised **Infrastructure Setup Guide**, formatted for clarity and consistency with the previous document.
-
------
 
 # Infrastructure Setup Guide
 
