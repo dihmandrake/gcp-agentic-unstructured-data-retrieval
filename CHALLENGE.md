@@ -1,7 +1,6 @@
-
 # Hackathon Challenge Guide: 
 
-Welcome to the challenge. This guide outlines opportunities to re-engineer parts of the system. Your success will be evaluated on three pillars:
+Welcome to the challenge. This guide outlines opportunities to re-engineer parts of the system. Your success will be evaluated on three challenges:
 
 
 
@@ -17,7 +16,7 @@ Welcome to the challenge. This guide outlines opportunities to re-engineer parts
 
 
 
-## Pillar 1: Completeness (The Code Hunt)
+## Challenge 1: Completeness (The Code Hunt)
 
 
 
@@ -32,12 +31,10 @@ Your first task is to find the `# TODO: HACKATHON CHALLENGE` flags hidden in the
     *   **Recursive Chunking:** This technique intelligently splits large documents by recursively working through a list of separators (e.g., paragraphs, then sentences, then words). This helps preserve the document's hierarchical structure.
 
 *   `src/search/vertex_client.py`: The current search is good but not great. Your goal is to make it more precise.
-    *   **Hybrid Search:** This approach combines the best of both worlds: traditional keyword-based search (great for acronyms and specific terms) and modern vector search (great for understanding context and meaning). The result is a more accurate and relevant set of search results.
-    *   **Metadata Filtering:** This allows the system to narrow down the search space *before* executing the query. For example, you could filter to only include documents created in the last year or those written by a specific author. This makes the search faster and the results more focused.
 
-*   `src/agents/rag_agent.py`: The agent is generic. Your goal is to give it clear guardrails and a personality.
-    *   **Persona:** This defines the agent's character and style. Is it a formal medical expert, a friendly assistant, or a concise summarizer? A clear persona makes the agent's responses more consistent and predictable.
-    *   **System Instructions:** These are the hard rules the agent must follow. For example: "Always cite your sources," "Never provide a diagnosis," or "Keep your answers to three sentences or less." This is crucial for ensuring the agent behaves safely and responsibly.
+    *   **Hybrid Search:** This approach combines the best of both worlds: traditional keyword-based search (great for acronyms and specific terms) and modern vector search (great for understanding context and meaning). The result is a more accurate and relevant set of search results.
+
+    *   **Metadata Filtering:** This allows the system to narrow down the search space *before* executing the query. For example, you could filter to only include documents created in the last year or those written by a specific author. This makes the search faster and the results more focused.
 
 
 
@@ -45,7 +42,73 @@ Your first task is to find the `# TODO: HACKATHON CHALLENGE` flags hidden in the
 
 
 
-## Pillar 2: Extensibility (The "New Data" Challenge)
+## Challenge 2: Prompt Engineering & Evaluation
+
+
+
+This challenge focuses on the art and science of prompting. A well-designed prompt is crucial for a high-performing agent. This challenge has two parts: making your prompts dynamic and then objectively measuring their quality.
+
+
+
+**Part 1: Agent Persona & Dynamic Prompts**
+
+
+
+The agent is generic. Your goal is to give it clear guardrails and make its instructions dynamic.
+
+
+
+*   **Persona (`src/agents/adk_agent.py`):** This defines the agent's character and style. Is it a formal medical expert, a friendly assistant, or a concise summarizer? A clear persona makes the agent's responses more consistent and predictable.
+
+*   **System Instructions (`src/agents/adk_agent.py`):** These are the hard rules the agent must follow. For example: "Always cite your sources," "Never provide a diagnosis," or "Keep your answers to three sentences or less." This is crucial for ensuring the agent behaves safely and responsibly.
+
+*   **Prompt Routing (`src/agents/adk_agent.py`):** This technique involves creating a router that selects the best prompt template based on the user's query. For example, a query asking for a summary would use a "summarizer" prompt, while a query asking for specific data points would use an "extractor" prompt. This allows the agent to adapt its persona and instructions to the task at hand. You would implement a new module to define different prompt strategies and then modify the agent to use a router to select one before executing the search.
+
+
+
+**Part 2: Prompt Evaluation**
+
+
+
+A good agent isn't just about a good prompt; it's about *measurably* good prompts. This advanced challenge requires you to use the **Vertex AI Gen AI Evaluation Service** to measure and improve the quality of your prompts.
+
+
+
+*   **Create a new script `scripts/run_evaluation.py`**:
+
+    *   This script should use the Vertex AI SDK to run an evaluation job.
+
+    *   It should read a set of test prompts from a file (e.g., a CSV or JSON).
+
+    *   It should evaluate the prompts against a model (e.g., `gemini-1.5-flash-001`) using metrics like `GENERAL_QUALITY`, `SAFETY`, and `RAG_CONTEXT_RELEVANCE`.
+
+
+
+*   **Create a new file `EVALUATION_RESULTS.md`**:
+
+    *   In this file, document your findings.
+
+    *   Include the results of your evaluation runs.
+
+    *   Explain how you used the evaluation results to refine your prompts. What did you change, and why?
+
+    *   Show a before-and-after comparison of your prompts and the corresponding evaluation scores.
+
+
+
+**Resources:**
+
+For code templates and implementation details, refer to the official documentation:
+
+👉 **[Vertex AI Gen AI Evaluation Service](https://cloud.google.com/vertex-ai/generative-ai/docs/models/evaluate-models)**
+
+
+
+-----
+
+
+
+## Challenge 3: Extensibility (The "New Data" Challenge)
 
 
 
@@ -75,11 +138,12 @@ Modify the ingestion pipeline to support a new format.
 
         def parse_other_format(file_path: str) -> str:
 
-            # TODO: HACKATHON CHALLENGE (Pillar 2)
+            # TODO: HACKATHON CHALLENGE (Challenge 2)
 
             # Implement logic to read other files than pdf.
 
             pass
+
         ```
 
 2.  **`src/ingestion/pipeline.py`**:
@@ -104,7 +168,7 @@ Modify the ingestion pipeline to support a new format.
 
         def run_ingestion(input_dir, output_dir):
 
-            # TODO: HACKATHON CHALLENGE (Pillar 2)
+            # TODO: HACKATHON CHALLENGE (Challenge 2)
 
             # 1. Glob for *.other_format files as well as *.pdf
 
@@ -120,7 +184,7 @@ Modify the ingestion pipeline to support a new format.
 
 
 
-## Pillar 3: Creativity (The Agent-to-Agent Flow)
+## Challenge 4: Creativity (The Agent-to-Agent Flow)
 
 
 
@@ -176,6 +240,8 @@ For code templates and implementation details, refer to the official ADK Python 
 
 👉 **[Google ADK Python Agents Samples](https://github.com/google/adk-samples/tree/main/python/agents)**
 
+
+
 -----
 
 
@@ -184,16 +250,25 @@ For code templates and implementation details, refer to the official ADK Python 
 
 
 
+
+
+
+
 Use this rubric to score the teams:
 
 
 
-| Category | Criteria | Points (0-5) |
-| :--- | :--- | :--- |
-| **Ingestion** | Did they fix the `chunker.py` TODOs (Semantic/Recursive)? | |
-| **Data Types** | Can the system successfully ingest and search a file with a different format? | |
-| **Search** | Did they implement Filtering or Hybrid Search in `vertex_client.py`? | |
-| **Architecture** | **(x2 Multiplier)** Is there a functioning Advanced ADK Pattern (Router, Auditor, etc.)? | |
-| **Stability** | Does the system run without crashing? | |
 
-**Total Score:** ___ / 30
+Here is the corrected Markdown table with the spacing fixed and the structure consolidated.
+
+| Category | Criteria | Points (0-5) |
+| --- | --- | --- |
+| **Ingestion** | Did they fix the `chunker.py` TODOs (Semantic/Recursive)? |  |
+| **Data Types** | Can the system successfully ingest and search a file with a different format? |  |
+| **Search** | Did they implement Filtering or Hybrid Search in `vertex_client.py`? |  |
+| **Prompt Engineering** | **(x2 Multiplier)** I Did they implement dynamic prompts and evaluate them? |  |
+| **Architecture** | **(x2 Multiplier)** Is there a functioning Advanced ADK Pattern (Router, Auditor, etc.)? |  |
+| **Stability** | Does the system run without crashing? |  |
+---
+Total Score: ___ / 45
+---
