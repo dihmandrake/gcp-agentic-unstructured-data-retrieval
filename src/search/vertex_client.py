@@ -15,6 +15,7 @@ class VertexSearchClient:
         self.project_id = os.getenv("PROJECT_ID")
         self.location = os.getenv("LOCATION")
         self.data_store_id = os.getenv("DATA_STORE_ID")
+        self.engine_id = os.getenv("ENGINE_ID")
 
         if not all([self.project_id, self.location, self.data_store_id]):
             logger.error("Missing one or more environment variables: PROJECT_ID, LOCATION, DATA_STORE_ID")
@@ -30,13 +31,11 @@ class VertexSearchClient:
         # Construct the serving_config path to target the data store directly
         # The serving config depends on whether an Engine is being used.
         if self.engine_id:
-            # Use the Engine-based serving config.
-            self.serving_config = self.search_client.serving_config_path(
-                project=self.project_id,
-                location=self.location,
-                collection="default_collection",
-                engine=self.engine_id,
-                serving_config="default_config",
+            # Use the Engine-based serving config. The 'serving_config_path' helper on the
+            # SearchServiceClient only supports data stores, so we construct the engine-based path manually.
+            self.serving_config = (
+                f"projects/{self.project_id}/locations/{self.location}/collections/default_collection/"
+                f"engines/{self.engine_id}/servingConfigs/default_config"
             )
         else:
             # Use the Data Store-based serving config.

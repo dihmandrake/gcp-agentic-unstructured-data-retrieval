@@ -9,12 +9,12 @@ from src.shared.validator import validate_datastore
 import os
 
 logger = setup_logger(__name__)
+app_name = os.getenv("APP_NAME", "GenAI-RAG")
+
 
 def run_chat_mode():
     logger.info("Initializing ADK Chat...")
-    import os
 
-app_name = os.getenv("APP_NAME", "GenAI-RAG")
     print(f"--- {app_name} ADK Chatbot ---")
     print("Type 'exit' to quit.")
     

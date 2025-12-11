@@ -34,11 +34,12 @@ model_config = Gemini(
     model="gemini-2.0-flash-lite",
 )
 
-agent_config = Agent(
-    import os
+import os
 
 app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(' ', '_')
-name=f"{app_name}_agent",
+
+agent_config = Agent(
+    name=f"{app_name}_agent",
     model=model_config,
     instruction=system_prompt,
     generate_content_config=types.GenerateContentConfig(temperature=0),
