@@ -1,4 +1,7 @@
 #!/bin/bash
+set -a; source .env; set +a;
+
+#!/bin/bash
 
 # --- Configuration ---
 # Source environment variables from .env file if it exists
@@ -13,7 +16,7 @@ if [ -z "${PROJECT_ID}" ] || [ -z "${LOCATION}" ] || [ -z "${DATA_STORE_ID}" ]; 
   exit 1
 fi
 
-DISPLAY_NAME="Nelly Hackathon DataStore" # This can remain as a default
+DISPLAY_NAME="${APP_NAME} Hackathon DataStore" # This can remain as a default
 DEFAULT_COLLECTION="default_collection"
 
 # --- 1. Authenticate with Google Cloud ---
