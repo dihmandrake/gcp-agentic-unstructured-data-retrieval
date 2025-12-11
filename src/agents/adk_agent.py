@@ -35,7 +35,10 @@ model_config = Gemini(
 )
 
 agent_config = Agent(
-    name="nelly_agent",
+    import os
+
+app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(' ', '_')
+name=f"{app_name}_agent",
     model=model_config,
     instruction=system_prompt,
     generate_content_config=types.GenerateContentConfig(temperature=0),
