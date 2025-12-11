@@ -6,8 +6,11 @@ from google.cloud import discoveryengine_v1 as discoveryengine
 # You can modify these or load them from os.environ
 PROJECT_ID = "tony-allen"
 LOCATION = "eu"  # Important: Must match your Data Store location
-DATA_STORE_ID = "nelly-vertex-search-datastore"
-ENGINE_ID = "nelly-search-app"
+import os
+
+app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(' ', '-')
+DATA_STORE_ID = f"{app_name}-vertex-search-datastore"
+ENGINE_ID = f"{app_name}-search-app"
 
 def create_engine():
     print(f"🚀 Initializing Engine Creation for: {ENGINE_ID} in {LOCATION}...")
@@ -22,7 +25,7 @@ def create_engine():
     # 2. Define the Enterprise Engine
     # We explicitly enable ENTERPRISE tier and LLM add-ons for RAG
     engine = discoveryengine.Engine(
-        display_name="Nelly Hackathon Enterprise Search",
+        display_name=f"{os.getenv('APP_NAME', 'GenAI-RAG')} Hackathon Enterprise Search",
         solution_type=discoveryengine.SolutionType.SOLUTION_TYPE_SEARCH,
         industry_vertical=discoveryengine.IndustryVertical.GENERIC,
         data_store_ids=[DATA_STORE_ID],
