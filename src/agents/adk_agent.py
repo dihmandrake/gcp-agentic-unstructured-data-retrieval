@@ -36,7 +36,7 @@ model_config = Gemini(
 
 import os
 
-app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(' ', '_')
+app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(" ", "_").replace("-", "_")
 
 agent_config = Agent(
     name=f"{app_name}_agent",
