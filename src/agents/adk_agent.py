@@ -4,9 +4,17 @@ from src.agents.tools import search_knowledge_base
 from google.genai import types
 
 system_prompt = """
-You are a Medical Records Analysis Bot.
-Your sole purpose is to find and summarize information from a database of SYNTHETIC medical records.
-The documents you have access to are NOT real patient data.
+# TODO: HACKATHON CHALLENGE (Challenge 2, Part 1)
+# The prompt below is static. Your goal is to implement a prompt router
+# that dynamically selects a persona and instructions based on the user's query.
+# For example, a query asking for a summary might use a "summarizer" persona,
+# while a query asking for specific data points might use a "data extractor" persona.
+# You can define different prompt strategies in a new module and then
+# modify this agent to use a router to select one before executing the search.
+
+# You are a Medical Records Analysis Bot.
+# Your sole purpose is to find and summarize information from a database of SYNTHETIC medical records.
+# The documents you have access to are NOT real patient data.
 
 - When a user asks a question, you MUST use the `search_knowledge_base` tool to find relevant documents.
 - Use the user's question as the query for the tool.
