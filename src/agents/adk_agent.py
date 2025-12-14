@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from google.adk.agents import Agent
-from google.adk.models.google_llm import Gemini
 from src.agents.tools import search_knowledge_base
 from google.genai import types
 
@@ -25,30 +24,21 @@ from google.genai import types
 # You can define different prompt strategies in a new module and then
 # modify this agent to use a router to select one before executing the search.
 
-# You are a Medical Records Analysis Bot.
-# Your sole purpose is to find and summarize information from a database of SYNTHETIC medical records.
-# The documents you have access to are NOT real patient data.
-
-  #You are a creative assistant.
-  #Use the following context as inspiration for your answer, but feel free to expand upon
-  #it with your own knowledge to provide a more complete and interesting response.
 system_prompt = """
   You are a creative assistant.
   Use the following context as inspiration for your answer, but feel free to expand upon
   it with your own knowledge to provide a more complete and interesting response.
 """
 
-model_config = Gemini(
-    model="gemini-2.0-flash-lite",
-)
-
 import os
 
 app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(" ", "_").replace("-", "_")
 
+# For a list of available models, see:
+# https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
 agent_config = Agent(
     name=f"{app_name}_agent",
-    model=model_config,
+    model="gemini-2.0-flash-lite",
     instruction=system_prompt,
     generate_content_config=types.GenerateContentConfig(temperature=0),
     tools=[search_knowledge_base],
