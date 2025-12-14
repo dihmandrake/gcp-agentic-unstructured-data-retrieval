@@ -6,6 +6,8 @@ from vertexai.evaluation import EvalTask
 import os
 import sys
 from dotenv import load_dotenv
+import uuid
+from google.genai import types
 
 # Load environment variables
 load_dotenv()
@@ -14,44 +16,57 @@ load_dotenv()
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.agents.adk_agent import system_prompt
 from src.agents.tools import search_knowledge_base
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts import InMemoryArtifactService
+from src.agents.adk_agent import agent_config, app_name
+import asyncio
 
 # Configuration
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = os.getenv("VERTEX_AI_REGION", "europe-west1") 
 GOLDEN_DATASET = "data/golden_dataset.jsonl"
 RESULTS_FILE = "eval_results.json"
+USER_ID = "eval_user_123"
 
-def get_rag_response(question):
+
+async def get_agent_response(question: str) -> str:
     """
-    Simulates the Agent's RAG flow for evaluation:
-    1. Search Knowledge Base (Tool)
-    2. Generate Answer (Model)
+    Uses google.adk.runners.Runner to get a text response from the agent.
     """
+    session_service = InMemorySessionService()
+    artifact_service = InMemoryArtifactService()
+    session_id = f"{app_name}-{uuid.uuid4().hex[:8]}"
+    runner = Runner(
+        agent=agent_config,
+        app_name=app_name,
+        session_service=session_service,
+        artifact_service=artifact_service,
+    )
+    await session_service.create_session(
+        app_name=app_name, user_id=USER_ID, session_id=session_id
+    )
     try:
-        # 1. RETRIEVE: Call the actual search tool
-        print(f"   🔍 Searching for: {question[:30]}...")
-        context = search_knowledge_base(question)
-        
-        # 2. GENERATE: Pass context to the model
-        prompt = f"""
-        {system_prompt}
-
-        CONTEXT:
-        {context}
-        
-        QUESTION:
-        {question}
-        """
-        
-        model = GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
-        return response.text.strip()
-
+        print(f"   🗣️ Asking agent: {question[:30]}...")
+        final_response_text = "Error: No response received."
+        async for event in runner.run_async(
+            user_id=USER_ID,
+            session_id=session_id,
+            new_message=types.Content(
+                role="user", parts=[types.Part(text=question)]
+            ),
+        ):
+            if event.is_final_response():
+                if event.content and event.content.parts:
+                    final_response_text = event.content.parts[0].text
+                    break  # Exit loop once final response is found
+        return final_response_text.strip()
     except Exception as e:
         print(f"❌ Error generating response: {e}")
-        return "Error generating response."
+        return f"Error generating response: {e}"
 
-def run_eval():
+
+async def main():
     print(f"🚀 Initializing Vertex AI in {LOCATION}...")
     vertexai.init(project=PROJECT_ID, location=LOCATION)
 
@@ -62,7 +77,7 @@ def run_eval():
         return
 
     with open(GOLDEN_DATASET, "r") as f:
-        for line in f:
+        for line in f: 
             data.append(json.loads(line))
     
     # Use 5 rows for a quick test (remove .head(5) for a full run)
@@ -70,7 +85,9 @@ def run_eval():
     
     # 2. Get Real Model Predictions
     print(f"🤖 Generating responses for {len(eval_df)} questions...")
-    eval_df["response"] = eval_df["question"].apply(get_rag_response)
+    questions = eval_df["question"].tolist()
+    responses = await asyncio.gather(*[get_agent_response(q) for q in questions])
+    eval_df["response"] = responses
 
     # 3. Define Metrics
     metrics = [
@@ -100,4 +117,4 @@ def run_eval():
     print(f"✅ Detailed results saved to {RESULTS_FILE}")
 
 if __name__ == "__main__":
-    run_eval()
+    asyncio.run(main())
