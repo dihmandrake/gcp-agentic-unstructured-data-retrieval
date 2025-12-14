@@ -99,6 +99,23 @@ Once the ingestion is complete, start the interactive chat session:
 poetry run python main.py --mode chat
 ```
 
+### 3. Evaluating the Agent
+This project includes an evaluation pipeline to measure the performance of the RAG agent.
+
+1.  **Generate Golden Dataset:**
+    This step uses a Gemini model to create a set of question-answer pairs from your documents.
+    ```bash
+    poetry run python scripts/generate_golden_dataset.py
+    ```
+    Verify that `data/processed/golden_dataset.jsonl` is created.
+
+2.  **Run the Evaluation Script:**
+    This script tests the agent's RAG capabilities and scores its performance on several metrics.
+    ```bash
+    poetry run python scripts/run_evaluation.py
+    ```
+    Inspect the `data/processed/eval_results.json` file and the summary in your terminal.
+
 ---
 
 ## Makefile Commands
@@ -107,6 +124,5 @@ This project includes a `Makefile` to streamline common tasks:
 
 -   `make install`: Installs all project dependencies using Poetry.
 -   `make check`: Runs linting and static type checking to ensure code quality.
--   `make create-datastore`: Executes the script to provision the Vertex AI Search Data Store.
--   `make create-engine`: Executes the script to create the Enterprise Search App, which wraps the Data Store.
--   `make infra`: A convenience command that runs both `create-datastore` and `create-engine` in sequence.
+-   `make generate-data`: Generates synthetic medical records for testing.
+-   `make infra`: A convenience command that runs all infrastructure setup steps in sequence.
