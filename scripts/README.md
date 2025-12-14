@@ -39,7 +39,7 @@ This directory contains all the operational scripts for the project, from infras
 
 #### `generate_golden_dataset.py`
 
--   **Purpose**: Creates the "golden" or "ground truth" dataset used for evaluating the agent's performance. It reads the raw PDFs, uses a powerful generative model (Gemini) to create high-quality question-and-answer pairs from each document, and saves them to `data/processed/golden_dataset.jsonl`.
+-   **Purpose**: Creates the "golden" or "ground truth" dataset used for evaluating the agent's performance. It reads the raw PDFs, uses Gemini to create high-quality question-and-answer pairs from each document, and saves them to `data/processed/golden_dataset.jsonl`.
 -   **How it's used**: Run this script after you have your raw data in place. The output is the benchmark against which the agent's answers are measured.
 -   **Usage**:
     ```bash
