@@ -12,6 +12,7 @@ load_dotenv()
 
 # Add 'src' to path so we can import the tool
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from src.agents.adk_agent import system_prompt
 from src.agents.tools import search_knowledge_base
 
 # Configuration
@@ -33,9 +34,8 @@ def get_rag_response(question):
         
         # 2. GENERATE: Pass context to the model
         prompt = f"""
-        You are a Medical Records Analysis Bot.
-        Answer the question based EXCLUSIVELY on the provided context. 
-        
+        {system_prompt}
+
         CONTEXT:
         {context}
         
@@ -85,7 +85,7 @@ def run_eval():
         dataset=eval_df,
         metrics=metrics,
         metric_column_mapping={
-            "prompt": "question",
+            "prompt": "context",
         },
         experiment="rag-mvp-eval-002"
     )
