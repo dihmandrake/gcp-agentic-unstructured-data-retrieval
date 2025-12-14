@@ -1,25 +1,56 @@
-# Evaluating the RAG Agent
+# Scripts Directory
 
-This directory contains the script for evaluating the performance of the RAG agent. The primary goal of this evaluation is to provide a reliable, automated measure of the agent's ability to answer questions accurately and safely based on the provided documents.
+This directory contains all the operational scripts for the project, from infrastructure setup to data generation and evaluation.
 
-## The Challenge: Fixing the Evaluation Harness
+---
 
-Currently, the `run_evaluation.py` script does **not** test the agent in a true 1-to-1 fashion. Instead of importing and running the actual ADK agent from `src/agents/adk_agent.py`, it **simulates** the agent's logic.
+## Script Descriptions
 
-### Why is this a Problem?
+### Infrastructure Setup
 
-This is a common anti-pattern in software testing for several critical reasons:
+#### `create_datastore.sh`
 
-1.  **False Confidence:** The simulation can produce high scores that give a false sense of security, while the real agent might fail in interactive use. As we discovered, the simulated agent scored well, but the real agent with a "bad" prompt would refuse to answer questions.
-2.  **Code Divergence:** The logic in the evaluation script and the logic in the agent are separate. Any changes made to the agent's prompt or configuration will not be reflected in the evaluation, making the test results meaningless over time.
-3.  **Incomplete Simulation:** The simulation only tests the "happy path" and fails to capture the complex decision-making of the real agent, such as its choice of whether or not to use a tool.
+-   **Purpose**: Creates a new **Data Store** in Google Cloud Vertex AI Search. A Data Store is the foundational container that holds your raw documents before they are indexed.
+-   **How it's used**: This script is typically run once during the initial project setup. It reads configuration variables like your `PROJECT_ID`, `LOCATION`, and desired `DATA_STORE_ID` from the `.env` file and uses the `curl` command to make a REST API call to Google Cloud to create the resource.
+-   **Usage**:
+    ```bash
+    bash scripts/create_datastore.sh
+    ```
 
-## The Task
+#### `create_enterprise_engine.py`
 
-Your task is to refactor the `run_evaluation.py` script to correctly evaluate the agent. This involves:
+-   **Purpose**: Creates a new **Enterprise Engine** and links it to the Data Store created by the previous script. The Engine is the "brain" that provides the advanced search and RAG capabilities (like summarization and question answering) on top of your data. This script specifically enables the `SEARCH_ADD_ON_LLM` feature, which is required for generative AI functionalities.
+-   **How it's used**: This is also run once during initial setup, after the Data Store has been created. It uses the Python client library for Vertex AI Search.
+-   **Usage**:
+    ```bash
+    poetry run python scripts/create_enterprise_engine.py
+    ```
 
-1.  **Importing the Agent:** Modify the script to import the fully configured `agent_config` object from `src/agents/adk_agent.py`.
-2.  **Running the Agent:** Use the ADK's `InMemoryRunner` or a similar mechanism to execute the agent for each question in the dataset. This will involve handling asynchronous code.
-3.  **Capturing the Output:** Capture the final text response from the agent and pass it to the Vertex AI Evaluation service.
+### Data Generation & Evaluation
 
-By completing this task, you will create a reliable test harness that accurately measures the performance of the agent, ensuring that any improvements to the prompt are correctly reflected in the evaluation scores.
+#### `generate_data.py`
+
+-   **Purpose**: Generates synthetic medical records in PDF format and saves them to the `data/raw/` directory. This allows you to create a large volume of realistic-looking test data.
+-   **How it's used**: This script uses the `Faker` library to create random patient names and the `reportlab` library to generate PDF files. It's useful for stress-testing the data ingestion and search pipeline.
+-   **Usage**:
+    ```bash
+    poetry run python scripts/generate_data.py
+    ```
+
+#### `generate_golden_dataset.py`
+
+-   **Purpose**: Creates the "golden" or "ground truth" dataset used for evaluating the agent's performance. It reads the raw PDFs, uses a powerful generative model (Gemini) to create high-quality question-and-answer pairs from each document, and saves them to `data/processed/golden_dataset.jsonl`.
+-   **How it's used**: Run this script after you have your raw data in place. The output is the benchmark against which the agent's answers are measured.
+-   **Usage**:
+    ```bash
+    poetry run python scripts/generate_golden_dataset.py
+    ```
+
+#### `run_evaluation.py`
+
+-   **Purpose**: This is the primary script for evaluating the RAG agent's performance. It runs the agent against each question in the `golden_dataset.jsonl`, then uses the Vertex AI Evaluation Service to score the agent's responses on metrics like "groundedness" and "instruction_following".
+-   **How it's used**: Run this script whenever you want to measure the impact of changes to your agent (e.g., prompt changes, model changes). The detailed results are saved to `data/processed/eval_results.json`.
+-   **Usage**:
+    ```bash
+    poetry run python scripts/run_evaluation.py
+    ```
