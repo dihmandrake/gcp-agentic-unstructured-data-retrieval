@@ -14,6 +14,7 @@
 from google.adk.agents import Agent
 from src.agents.tools import search_knowledge_base
 from google.genai import types
+import os
 
 
 # TODO: HACKATHON CHALLENGE (Challenge 2, Part 1)
@@ -27,8 +28,6 @@ from google.genai import types
 system_prompt = """
 You are a helpful assistant.
 """
-
-import os
 
 app_name = os.getenv("APP_NAME", "GenAI-RAG").lower().replace(" ", "_").replace("-", "_")
 
