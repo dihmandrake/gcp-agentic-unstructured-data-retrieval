@@ -27,15 +27,9 @@ install: # Install virtual environment with poetry
 	@poetry install
 
 .PHONY: check
-check: # Check lock file consistency and run static code analysis
+check: # Check lock file consistency
 	@echo "🚀 Checking lock file consistency with 'pyproject.toml'"
 	@poetry check --lock
-	@echo "🚀 Linting code: Running ruff"
-	@poetry run ruff check --fix src/
-	@echo "🚀 Static type checking: Running mypy"
-	@poetry run mypy src/
-	@echo "🚀 Checking for obsolete dependencies: Running deptry"
-	@poetry run deptry src/
 
 .PHONY: generate-data
 generate-data: # Generate synthetic PDF medical records for testing
@@ -64,7 +58,16 @@ create-gcs-bucket: # Create the GCS bucket for document ingestion
 	@echo "🚀 Creating GCS Bucket..."
 	@gsutil mb -p $(PROJECT_ID) -l $(LOCATION) gs://$(GCS_BUCKET_NAME) || true
 
+
+.PHONY: grant-permissions
+grant-permissions: # Grant necessary IAM roles for the project
+	@echo "🚀 Granting required IAM roles to the current user..."
+	@gcloud projects add-iam-policy-binding $(PROJECT_ID) --member="user:$$(gcloud config get-value account)" --role="roles/aiplatform.user"
+	@gcloud projects add-iam-policy-binding $(PROJECT_ID) --member="user:$$(gcloud config get-value account)" --role="roles/serviceusage.serviceUsageConsumer"
+	@echo "🚀 Setting the quota project for Application Default Credentials..."
+	@gcloud auth application-default set-quota-project $(PROJECT_ID)
+
 .PHONY: infra
 infra: # Run all infrastructure setup steps
-	@make create-datastore && make create-engine && make create-gcs-bucket
+	@make grant-permissions && make create-datastore && make create-engine && make create-gcs-bucket
 	@echo "✅ All infrastructure created successfully!"

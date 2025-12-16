@@ -19,11 +19,7 @@ logger = setup_logger(__name__)
 search_client = VertexSearchClient()
 
 def search_knowledge_base(query: str) -> str:
-    """
-    import os
-
-app_name = os.getenv("APP_NAME", "GenAI-RAG")
-) to find information and answer user questions.
+    """Searches the knowledge base to find information to answer user questions.
 
     Args:
         query: A detailed search query crafted from the user's question.
