@@ -1,64 +1,52 @@
 
 # Infrastructure Setup Guide
 
-This guide provides the necessary scripts and instructions to provision the Google Cloud infrastructure. The setup follows a two-step hierarchical process:
+This guide provides a streamlined, automated process to provision the required Google Cloud infrastructure using a single command.
 
-1.  **Create a Vertex AI Search Data Store:** Storage and indexing for unstructured docs (PDFs).
-2.  **Create an Enterprise Search App (Engine):** The serving layer that provides advanced RAG capabilities (like `extractive_segments`).
+The `Makefile` in the root of this project contains an `infra` target that automates the following setup steps in the correct order:
+1.  **Grant Permissions:** Assigns the necessary IAM roles (`AI Platform User`, `Service Usage Consumer`) to your Google Cloud user.
+2.  **Create a Vertex AI Search Data Store:** Provisions the storage and indexing layer for your unstructured documents.
+3.  **Create an Enterprise Search App (Engine):** Deploys the serving layer that provides advanced RAG capabilities.
+4.  **Create a GCS Bucket:** Creates the Google Cloud Storage bucket required for the data ingestion pipeline.
 
------
+---
 
-## Step 1: Create the Vertex AI Search Data Store
+## Automated Setup using `make`
 
-This script creates the foundational Data Store where your documents will live.
+This is the recommended method for setting up all required infrastructure components.
 
 ### Instructions
 
-1.  **Configure Environment:** Ensure your `.env` file contains your `PROJECT_ID`, `LOCATION`, and a unique `DATA_STORE_ID`.
-2.  **Authenticate:** Run `gcloud auth application-default login` if you haven't already.
-3.  **Run Script:** Execute the following from the project root:
+1.  **Configure Environment:** Ensure your `.env` file is correctly populated with your `PROJECT_ID`, `LOCATION`, `DATA_STORE_ID`, `ENGINE_ID`, and a unique `GCS_BUCKET_NAME`.
+2.  **Authenticate:** Run `gcloud auth application-default login` if you haven't already to authenticate your local environment.
+3.  **Run Command:** Execute the following from the project root:
 
 <!-- end list -->
 
 ```bash
-bash scripts/create_datastore.sh
+make infra
 ```
 
-> **Note:** The script will automatically use variables from your `.env` file to target the correct project and location.
+  * *Time Estimate: This entire process typically takes 2-3 minutes.*
 
------
+The script will use the variables from your `.env` file to configure and create all the necessary resources in your Google Cloud project.
 
-## Step 2: Create the Enterprise Search App (Engine)
+---
 
-This script wraps the Data Store from Step 1 in an Enterprise-tier App, unlocking the specific features required for the RAG agent.
+## Final Step: Update Application Code
 
-### Instructions
-
-1.  **Verify Configuration:** Check the top of `scripts/create_enterprise_engine.py` to ensure `PROJECT_ID`, `LOCATION`, and `DATA_STORE_ID` match the resources created in Step 1.
-2.  **Run Script:** Execute the Python script via poetry:
-
-<!-- end list -->
-
-```bash
-poetry run python scripts/create_enterprise_engine.py
-```
-
-  * *Time Estimate: This process typically takes 1-2 minutes.*
-
------
-
-## Application Code
-
-Once the Enterprise App is live, you must manually point your application code to the new Engine resource.
+Once the `make infra` command completes successfully, you must manually point your application code to the newly created Engine resource.
 
 **Target File:** `src/search/vertex_client.py`
+
+Find the section for `self.serving_config` and ensure the `engine` parameter is correctly reading the `ENGINE_ID` from your `.env` file.
 
 ```python
 self.serving_config = self.search_client.serving_config_path(
     project=self.project_id,
     location=self.location,
     collection="default_collection",
-    engine=os.getenv("ENGINE_ID"), # Ensure ENGINE_ID is added to your .env
+    engine=os.getenv("ENGINE_ID"), # Ensure ENGINE_ID is in your .env
     serving_config="default_config",
 )
 ```
