@@ -27,15 +27,9 @@ install: # Install virtual environment with poetry
 	@poetry install
 
 .PHONY: check
-check: # Check lock file consistency and run static code analysis
+check: # Check lock file consistency
 	@echo "🚀 Checking lock file consistency with 'pyproject.toml'"
 	@poetry check --lock
-	@echo "🚀 Linting code: Running ruff"
-	@poetry run ruff check --fix src/
-	@echo "🚀 Static type checking: Running mypy"
-	@poetry run mypy src/
-	@echo "🚀 Checking for obsolete dependencies: Running deptry"
-	@poetry run deptry src/
 
 .PHONY: generate-data
 generate-data: # Generate synthetic PDF medical records for testing

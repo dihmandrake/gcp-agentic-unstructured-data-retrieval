@@ -125,6 +125,6 @@ The evaluation script uses a pre-made golden dataset. If you want to create your
 ---
 ## Makefile Commands Reference
 -   `make install`: Installs all project dependencies.
--   `make check`: Runs linting and static type checking.
+-   `make check`: Checks poetry lock file consistency.
 -   `make generate-data`: Generates synthetic medical records for testing.
 -   `make infra`: A convenience command that runs all infrastructure setup steps.

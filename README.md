@@ -13,7 +13,7 @@ Here is a summary of the most important commands for setting up and running the 
 ### Makefile Commands
 -   `make install`: Installs all project dependencies using Poetry.
 -   `make infra`: A convenience command that runs all infrastructure setup steps in sequence (permissions, datastore, engine, GCS bucket).
--   `make check`: Runs linting and static type checking to ensure code quality.
+-   `make check`: Checks poetry lock file consistency.
 
 ### Application Commands
 -   `poetry run python main.py --mode ingest`: Runs the ingestion pipeline to process raw documents and load them into Vertex AI Search.
